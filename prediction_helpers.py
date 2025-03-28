@@ -41,7 +41,7 @@ def iterate_over_proportion(data, proportion, models):
         results[model_name] = {
             'Average R2': np.mean(r2_scores),
             'Average RMSE': np.mean(rmse_scores),
-            'r2 array': r2_scores
+            'r2 array': sorted(r2_scores, reverse=True)
         }
 
     return results
@@ -58,7 +58,7 @@ def plot_results(results):
         plt.figure(figsize=(8, 4))
         plt.bar(range(len(metrics['r2 array'])), metrics['r2 array'], color='skyblue')
         plt.title(f"R² Values for {model_name}")
-        plt.xlabel("Target Column Index")
+        plt.xlabel("Genes")
         plt.ylabel("R² Score")
         plt.ylim(0, 1)
         plt.show()
