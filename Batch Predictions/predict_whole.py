@@ -14,12 +14,12 @@ random.seed(35)
 proportion = 1
 
 
-results_ExE = iterate_over_proportion(ExE, proportion, predictive_models),
-results_NxN = iterate_over_proportion(NxN, proportion, predictive_models),
+results_ExE = iterate_over_proportion(ExE, proportion, predictive_models)
+results_NxN = iterate_over_proportion(NxN, proportion, predictive_models)
 results_ExN = iterate_over_proportion(ExN, proportion, predictive_models)
 
 
-results = [results_ExE, results_NxN, results_ExN]
+results = [results_ExE]
 
 
 output_file = "output/results.txt"
@@ -30,9 +30,8 @@ with open(output_file, "w") as f:
 
         f.write(f"Results for dataset {['ExE', 'NxN', 'ExN'][i]}\n")
         f.write("="*50 + "\n")
-        print_results(result, f)
         f.write("="*50 + "\n")
-        
+
         for model in predictive_models:
             top_genes_df = print_top_genes(results_ExE, model.__class__.__name__)
         
