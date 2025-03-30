@@ -19,7 +19,7 @@ results_NxN = iterate_over_proportion(NxN, proportion, predictive_models)
 results_ExN = iterate_over_proportion(ExN, proportion, predictive_models)
 
 
-results = [results_ExE]
+results = [results_ExE, results_NxN, results_ExN]
 
 
 output_file = "output/results.txt"
@@ -33,7 +33,7 @@ with open(output_file, "w") as f:
         f.write("="*50 + "\n")
 
         for model in predictive_models:
-            top_genes_df = print_top_genes(results_ExE, model.__class__.__name__)
+            top_genes_df = print_top_genes(results_ExE, model.__class__.__name__, 20)
         
             f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
             f.write(top_genes_df.to_string(index=False))
