@@ -7,19 +7,19 @@ ExN = pd.read_csv('../extracted_data/ExN_filled_20.csv', sep=',', index_col=0)
 predictive_models = [ 
     Ridge(alpha=5),
     Lasso(alpha=0.0001),
-    RandomForestRegressor(n_estimators=10, max_depth=10)
+    RandomForestRegressor(n_estimators=10, max_depth=10),
 ]
 
 random.seed(35)
 proportion = 1
 
 
-results_ExE = iterate_over_proportion(ExE, proportion, predictive_models)
-results_NxN = iterate_over_proportion(NxN, proportion, predictive_models)
-results_ExN = iterate_over_proportion(ExN, proportion, predictive_models)
+results_ExE = iterate_over_proportion(ExE, proportion, predictive_models + [create_neural_network(ExE.shape[1])])
+results_NxN = iterate_over_proportion(NxN, proportion, predictive_models + [create_neural_network(NxN.shape[1])])
+results_ExN = iterate_over_proportion(ExN, proportion, predictive_models + [create_neural_network(ExN.shape[1])])
 
 
-results = [results_ExE, results_NxN, results_ExN]
+results = [results_ExE]
 
 
 output_file = "output/results.txt"
