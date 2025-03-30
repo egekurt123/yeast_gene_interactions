@@ -14,12 +14,12 @@ random.seed(35)
 proportion = 1
 
 
-results_ExE = iterate_over_proportion(ExE, proportion, predictive_models + [create_neural_network(ExE.shape[1])])
-results_NxN = iterate_over_proportion(NxN, proportion, predictive_models + [create_neural_network(NxN.shape[1])])
-results_ExN = iterate_over_proportion(ExN, proportion, predictive_models + [create_neural_network(ExN.shape[1])])
+results_ExE = iterate_over_proportion(ExE, proportion, predictive_models)
+results_NxN = iterate_over_proportion(NxN, proportion, predictive_models)
+results_ExN = iterate_over_proportion(ExN, proportion, predictive_models)
 
 
-results = [results_ExE]
+results = [results_ExE, results_NxN, results_ExN]
 
 
 output_file = "output/results.txt"
