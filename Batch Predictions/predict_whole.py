@@ -33,7 +33,7 @@ with open(output_file, "w") as f:
         f.write("="*50 + "\n")
 
         for model in predictive_models:
-            top_genes_df = print_top_genes(results_ExE, model.__class__.__name__, 20)
+            top_genes_df = print_top_genes(model, model.__class__.__name__, 20)
         
             f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
             f.write(top_genes_df.to_string(index=False))
