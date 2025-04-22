@@ -70,7 +70,7 @@ def iterate_over_proportion_embeddings(data, embeddings, proportion, models):
         rmse_scores = []
 
         results_list = Parallel(n_jobs=-1)(
-            delayed(lambda col: evaluate_model(model, data.drop(columns=[col]).merge(embeddings, on='gene_id', how='inner'), data[col]))(col)
+            delayed(lambda col: evaluate_model(model, data.drop(columns=[col]).merge(embeddings, on='gene_id', how='left').fillna(0), data[col]))(col)
             for col in selected_columns
         )
 
