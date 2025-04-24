@@ -6,9 +6,9 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.pipeline import Pipeline
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.optimizers import Adam
+#from tensorflow.keras.models import Sequential
+#from tensorflow.keras.layers import Dense, Input
+#from tensorflow.keras.optimizers import Adam
 import random
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
@@ -16,12 +16,12 @@ from joblib import Parallel, delayed
 
 def evaluate_model(model, X, y):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    if isinstance(model, Sequential):  # special case for neural network
-        model.fit(X_train, y_train, validation_split=0.2, epochs=50, batch_size=32, verbose=0)  
-        y_pred = model.predict(X_test).flatten()  # Flatten because it returns (N,1) shape  
-    else:
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
+#    if isinstance(model, Sequential):  # special case for neural network
+#        model.fit(X_train, y_train, validation_split=0.2, epochs=50, batch_size=32, verbose=0)  
+#        y_pred = model.predict(X_test).flatten()  # Flatten because it returns (N,1) shape  
+#    else:
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
     r2 = r2_score(y_test, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     return r2, rmse
@@ -123,14 +123,14 @@ def print_top_genes(results, model_name, top_n=10):
 
     return top_genes
 
-def create_neural_network(data):
-    model = Sequential([
-        Input(shape=(data.shape[1],)),  
-        Dense(128, activation='relu'),
-        Dense(64, activation='relu'),
-        Dense(64, activation='relu'),
-        Dense(64, activation='relu'),
-        Dense(1)
-    ])
-    model.compile(optimizer=Adam(learning_rate=0.001), loss='mse', metrics=['mse'])
-    return model 
+#def create_neural_network(data):
+#    model = Sequential([
+#        Input(shape=(data.shape[1],)),  
+#        Dense(128, activation='relu'),
+#        Dense(64, activation='relu'),
+#        Dense(64, activation='relu'),
+#        Dense(64, activation='relu'),
+#        Dense(1)
+#    ])
+#    model.compile(optimizer=Adam(learning_rate=0.001), loss='mse', metrics=['mse'])
+#    return model 

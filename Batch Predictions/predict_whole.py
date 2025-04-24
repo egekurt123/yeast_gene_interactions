@@ -26,18 +26,41 @@ output_file = "output/results.txt"
 
 with open(output_file, "w") as f:
 
-    for i, result in enumerate(results):
+    #TODO extend for loop
 
-        f.write(f"Results for dataset {['ExE', 'NxN', 'ExN'][i]}\n")
-        f.write("="*50 + "\n")
-        f.write("="*50 + "\n")
+    f.write(f"Results for dataset ExE\n")
+    f.write("="*50 + "\n")
+    f.write("="*50 + "\n")
 
-        for model in predictive_models:
-            top_genes_df = print_top_genes(model, model.__class__.__name__, 20)
+    for model in predictive_models:
+        top_genes_df = print_top_genes(results_ExE, model.__class__.__name__, 20)
         
-            f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
-            f.write(top_genes_df.to_string(index=False))
-            f.write("\n" + "="*50 + "\n")
+        f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
+        f.write(top_genes_df.to_string(index=False))
+        f.write("\n" + "="*50 + "\n")
+
+    f.write(f"Results for dataset ExN\n")
+    f.write("="*50 + "\n")
+    f.write("="*50 + "\n")
+
+    for model in predictive_models:
+        top_genes_df = print_top_genes(results_ExN, model.__class__.__name__, 20)
+        
+        f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
+        f.write(top_genes_df.to_string(index=False))
+        f.write("\n" + "="*50 + "\n")
+
+
+    f.write(f"Results for dataset NxN\n")
+    f.write("="*50 + "\n")
+    f.write("="*50 + "\n")
+
+    for model in predictive_models:
+        top_genes_df = print_top_genes(results_NxN, model.__class__.__name__, 20)
+        
+        f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
+        f.write(top_genes_df.to_string(index=False))
+        f.write("\n" + "="*50 + "\n")
 
 print(f"Results written to {output_file}")
 
