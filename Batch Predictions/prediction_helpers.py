@@ -26,7 +26,7 @@ def evaluate_model(model, X, y):
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     return r2, rmse
 
-def iterate_over_proportion(data, proportion, models):
+def iterate_over_proportion_only_interactions(data, proportion, models):
     num_columns = max(1, int(data.shape[1] * proportion)) 
     random.seed(35)
     selected_columns = random.sample(data.columns.tolist(), num_columns)
@@ -57,7 +57,7 @@ def iterate_over_proportion(data, proportion, models):
     return results
 
 
-def iterate_over_proportion_embeddings(data, embeddings, proportion, models):
+def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion, models):
     num_columns = max(1, int(data.shape[1] * proportion)) 
     random.seed(35)
     selected_columns = random.sample(data.columns.tolist(), num_columns)
@@ -71,6 +71,36 @@ def iterate_over_proportion_embeddings(data, embeddings, proportion, models):
 
         results_list = Parallel(n_jobs=-1)(
             delayed(lambda col: evaluate_model(model, data.drop(columns=[col]).merge(embeddings, on='gene_id', how='left').fillna(0), data[col]))(col)
+            for col in selected_columns
+        )
+
+        r2_scores = [r2 for r2, _ in results_list]
+        rmse_scores = [rmse for _, rmse in results_list]
+
+        results[model_name] = {
+            'Average R2': np.mean(r2_scores),
+            'Average RMSE': np.mean(rmse_scores),
+            'r2 array': r2_scores,
+            'gene array': selected_columns
+
+        }
+
+    return results
+
+def iterate_over_proportion_only_embeddings(data, embeddings, proportion, models):
+    num_columns = max(1, int(data.shape[1] * proportion)) 
+    random.seed(35)
+    selected_columns = random.sample(data.columns.tolist(), num_columns)
+
+    results = {}
+
+    for model in models:
+        model_name = model.__class__.__name__
+        r2_scores = []
+        rmse_scores = []
+
+        results_list = Parallel(n_jobs=-1)(
+            delayed(lambda col: evaluate_model(model, data[[col]].merge(embeddings, on='gene_id', how='inner').fillna(0), data[col]))(col)
             for col in selected_columns
         )
 
