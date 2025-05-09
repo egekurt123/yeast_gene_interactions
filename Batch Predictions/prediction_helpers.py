@@ -56,9 +56,9 @@ def iterate_over_proportion_only_interactions(data, proportion, models):
 
     return results
 
-
 def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion, models):
-    num_columns = max(1, int(data.shape[1] * proportion)) 
+    merged_data = data.merge(embeddings, on='gene_id', how='inner').fillna(0)
+    num_columns = max(1, int(merged_data.shape[1] * proportion)) 
     random.seed(35)
     selected_columns = random.sample(data.columns.tolist(), num_columns)
 
@@ -70,7 +70,7 @@ def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion
         rmse_scores = []
 
         results_list = Parallel(n_jobs=-1)(
-            delayed(lambda col: evaluate_model(model, data.drop(columns=[col]).merge(embeddings, on='gene_id', how='left').fillna(0), data[col]))(col)
+            delayed(lambda col: evaluate_model(model, merged_data.drop(columns=[col]), merged_data[col]))(col)
             for col in selected_columns
         )
 
@@ -88,9 +88,17 @@ def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion
     return results
 
 def iterate_over_proportion_only_embeddings(data, embeddings, proportion, models):
-    num_columns = max(1, int(data.shape[1] * proportion)) 
+    shared_ids = data['gene_id'].isin(embeddings['gene_id'])
+    data_shared = data[shared_ids].copy().reset_index()
+    embeddings_shared = embeddings[embeddings['gene_id'].isin(data['gene_id'])].copy().reset_index()
+
+    data_shared = data_shared.sort_values('gene_id')
+    embeddings_shared = embeddings_shared.sort_values('gene_id')
+
+    target_cols = [col for col in data_shared.columns]
+    num_columns = max(1, int(data_shared.shape[1] * proportion)) 
     random.seed(35)
-    selected_columns = random.sample(data.columns.tolist(), num_columns)
+    selected_columns = random.sample(target_cols, num_columns)
 
     results = {}
 
@@ -100,7 +108,7 @@ def iterate_over_proportion_only_embeddings(data, embeddings, proportion, models
         rmse_scores = []
 
         results_list = Parallel(n_jobs=-1)(
-            delayed(lambda col: evaluate_model(model, data[[col]].merge(embeddings, on='gene_id', how='inner').fillna(0), data[col]))(col)
+            delayed(lambda col: evaluate_model(model, embeddings_shared.drop(columns=["gene_id"]), data_shared[col]))(col)
             for col in selected_columns
         )
 
@@ -116,7 +124,6 @@ def iterate_over_proportion_only_embeddings(data, embeddings, proportion, models
         }
 
     return results
-
 
 
 
