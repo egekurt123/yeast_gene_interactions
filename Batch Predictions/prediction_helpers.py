@@ -60,7 +60,7 @@ def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion
     merged_data = data.merge(embeddings, on='gene_id', how='inner').fillna(0)
     num_columns = max(1, int(merged_data.shape[1] * proportion)) 
     random.seed(35)
-    selected_columns = random.sample(data.columns.tolist(), num_columns)
+    selected_columns = random.sample(merged_data.columns.tolist(), num_columns)
 
     results = {}
 
