@@ -6,6 +6,7 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 #from tensorflow.keras.models import Sequential
 #from tensorflow.keras.layers import Dense, Input
 #from tensorflow.keras.optimizers import Adam
@@ -20,6 +21,11 @@ def evaluate_model(model, X, y):
 #        model.fit(X_train, y_train, validation_split=0.2, epochs=50, batch_size=32, verbose=0)  
 #        y_pred = model.predict(X_test).flatten()  # Flatten because it returns (N,1) shape  
 #    else:
+    
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)       
+
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
     r2 = r2_score(y_test, y_pred)
