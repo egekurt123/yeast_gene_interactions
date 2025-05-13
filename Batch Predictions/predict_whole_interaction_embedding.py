@@ -5,7 +5,7 @@ NxN = pd.read_csv('../extracted_data/NxN_imputed_10.csv', sep=',', index_col=0)
 ExN = pd.read_csv('../extracted_data/ExN_filled_20.csv', sep=',', index_col=0)
 
 embeddings = pd.read_csv('../extracted_data/yeast_emb_embeddings_yeastnet_genex.csv', sep=',', index_col=0)
-embeddings = embeddings.reset_index().set_index('gene_id')
+embeddings = embeddings.set_index('gene_id')
 
 predictive_models = [ 
     Ridge(alpha=5),
@@ -36,9 +36,10 @@ with open(output_file, "w") as f:
     f.write("="*50 + "\n")
 
     for model in predictive_models:
-        top_genes_df = print_top_genes(results_ExE, model.__class__.__name__, 20)
+        top_genes_df, average_r2 = print_top_genes(results_ExE, model.__class__.__name__, 20)
         
         f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
+        f.write(f"Average R²: {average_r2:.4f}\n")
         f.write(top_genes_df.to_string(index=False))
         f.write("\n" + "="*50 + "\n")
 
@@ -47,9 +48,10 @@ with open(output_file, "w") as f:
     f.write("="*50 + "\n")
 
     for model in predictive_models:
-        top_genes_df = print_top_genes(results_ExN, model.__class__.__name__, 20)
+        top_genes_df, average_r2 = print_top_genes(results_ExN, model.__class__.__name__, 20)
         
         f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
+        f.write(f"Average R²: {average_r2:.4f}\n")
         f.write(top_genes_df.to_string(index=False))
         f.write("\n" + "="*50 + "\n")
 
@@ -59,9 +61,10 @@ with open(output_file, "w") as f:
     f.write("="*50 + "\n")
 
     for model in predictive_models:
-        top_genes_df = print_top_genes(results_NxN, model.__class__.__name__, 20)
+        top_genes_df, average_r2 = print_top_genes(results_NxN, model.__class__.__name__, 20)
         
         f.write(f"\nTop Genes for Model: {model.__class__.__name__}\n")
+        f.write(f"Average R²: {average_r2:.4f}\n")
         f.write(top_genes_df.to_string(index=False))
         f.write("\n" + "="*50 + "\n")
 

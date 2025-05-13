@@ -22,10 +22,6 @@ def evaluate_model(model, X, y):
 #        y_pred = model.predict(X_test).flatten()  # Flatten because it returns (N,1) shape  
 #    else:
     
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)       
-
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
     r2 = r2_score(y_test, y_pred)
@@ -63,10 +59,21 @@ def iterate_over_proportion_only_interactions(data, proportion, models):
     return results
 
 def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion, models):
-    merged_data = data.merge(embeddings, on='gene_id', how='inner').fillna(0)
-    num_columns = max(1, int(merged_data.shape[1] * proportion)) 
+
+    data = data.reset_index() if 'gene_id' not in data.columns else data.copy()
+    embeddings = embeddings.reset_index() if 'gene_id' not in embeddings.columns else embeddings.copy()
+
+    shared_ids = data['gene_id'].isin(embeddings['gene_id'])
+    data_shared = data[shared_ids].copy().reset_index()
+    embeddings_shared = embeddings[embeddings['gene_id'].isin(data['gene_id'])].copy().reset_index()
+
+    data_shared = data_shared.sort_values('gene_id').set_index('gene_id')
+    embeddings_shared = embeddings_shared.sort_values('gene_id').set_index('gene_id')
+
+    merged_data = data_shared.merge(embeddings_shared, on='gene_id', how='inner').fillna(0)
+    num_columns = max(1, int(data_shared.shape[1] * proportion)) 
     random.seed(35)
-    selected_columns = random.sample(merged_data.columns.tolist(), num_columns)
+    selected_columns = random.sample(data_shared.columns.tolist(), num_columns)
 
     results = {}
 
@@ -76,7 +83,7 @@ def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion
         rmse_scores = []
 
         results_list = Parallel(n_jobs=-1)(
-            delayed(lambda col: evaluate_model(model, merged_data.drop(columns=[col]), merged_data[col]))(col)
+            delayed(lambda col: evaluate_model(model, merged_data.drop(columns=[col]), data_shared[col]))(col)
             for col in selected_columns
         )
 
@@ -94,6 +101,10 @@ def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion
     return results
 
 def iterate_over_proportion_only_embeddings(data, embeddings, proportion, models):
+
+    data = data.reset_index() if 'gene_id' not in data.columns else data.copy()
+    embeddings = embeddings.reset_index() if 'gene_id' not in embeddings.columns else embeddings.copy()
+    
     shared_ids = data['gene_id'].isin(embeddings['gene_id'])
     data_shared = data[shared_ids].copy().reset_index()
     embeddings_shared = embeddings[embeddings['gene_id'].isin(data['gene_id'])].copy().reset_index()
@@ -156,6 +167,8 @@ def print_top_genes(results, model_name, top_n=10):
         return
     
     r2_scores = results[model_name]['r2 array']
+    average_r2 = np.mean(results[model_name]['r2 array'])
+
     genes = results[model_name]['gene array']
 
     gene_r2_df = pd.DataFrame({'Gene': genes, 'R2 Score': r2_scores})
@@ -164,7 +177,7 @@ def print_top_genes(results, model_name, top_n=10):
     print(f"\nTop {top_n} Genes by R² Score for {model_name}:")
     print(top_genes.to_string(index=False))
 
-    return top_genes
+    return top_genes, average_r2
 
 #def create_neural_network(data):
 #    model = Sequential([
