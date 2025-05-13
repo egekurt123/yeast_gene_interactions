@@ -25,7 +25,7 @@ results_ExN = iterate_over_proportion_only_embeddings(ExN, embeddings, proportio
 results = [results_ExE, results_NxN, results_ExN]
 
 
-output_file = "output/results.txt"
+output_file = "output/only_embedding/results.txt"
 
 with open(output_file, "w") as f:
 
