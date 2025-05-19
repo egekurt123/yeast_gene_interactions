@@ -8,6 +8,7 @@ predictive_models = [
     Ridge(alpha=5),
     Lasso(alpha=0.0001),
     RandomForestRegressor(n_estimators=10, max_depth=10),
+    create_neural_network(1)
 ]
 
 random.seed(35)

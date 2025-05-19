@@ -87,42 +87,6 @@ def iterate_over_proportion_only_interactions(data, proportion, models):
 
     return results
 
-def iterate_over_proportion_interactions_embeddings(data, embeddings, proportion, models):
-    if 'gene_id' not in data.columns:
-        data = data.reset_index()
-    if 'gene_id' not in embeddings.columns:
-        embeddings = embeddings.reset_index()
-
-    shared_ids = set(data['gene_id']) & set(embeddings['gene_id'])
-    data_shared = data[data['gene_id'].isin(shared_ids)].sort_values('gene_id')
-    embeddings_shared = embeddings[embeddings['gene_id'].isin(shared_ids)].sort_values('gene_id')
-
-    merged_data = pd.merge(data_shared, embeddings_shared, on='gene_id', how='inner').fillna(0)
-
-    target_cols = [col for col in data_shared.columns if col != 'gene_id']
-    num_columns = max(1, int(len(target_cols) * proportion))
-    random.seed(35)
-    selected_columns = random.sample(target_cols, num_columns)
-
-    results = {}
-
-    for model in models:
-        model_name = model.__class__.__name__
-        results_list = Parallel(n_jobs=-1)(
-            delayed(lambda col: evaluate_model(model, merged_data.drop(columns=[col, 'gene_id']), merged_data[col]))(col)
-            for col in selected_columns
-        )
-        r2_scores = [r2 for r2, _ in results_list]
-        rmse_scores = [rmse for _, rmse in results_list]
-        results[model_name] = {
-            'Average R2': np.mean(r2_scores),
-            'Average RMSE': np.mean(rmse_scores),
-            'r2 array': r2_scores,
-            'gene array': selected_columns
-        }
-
-    return results
-
 def iterate_over_proportion_only_embeddings(data, embeddings, proportion, models):
 
     if 'gene_id' not in data.columns:
