@@ -1,10 +1,10 @@
 from prediction_helpers import *
 
-ExE = pd.read_csv('../extracted_data/ExE_imputed_5.csv', sep=',', index_col=0)
-NxN = pd.read_csv('../extracted_data/NxN_imputed_10.csv', sep=',', index_col=0)
-ExN = pd.read_csv('../extracted_data/ExN_filled_20.csv', sep=',', index_col=0)
+ExE = pd.read_csv('../../extracted_data/ExE_imputed_5.csv', sep=',', index_col=0)
+NxN = pd.read_csv('../../extracted_data/NxN_imputed_10.csv', sep=',', index_col=0)
+ExN = pd.read_csv('../../extracted_data/ExN_filled_20.csv', sep=',', index_col=0)
 
-embeddings = pd.read_csv('../extracted_data/yeast_emb_embeddings_yeastnet_genex.csv', sep=',', index_col=0)
+embeddings = pd.read_csv('../../extracted_data/yeast_emb_embeddings_yeastnet_genex.csv', sep=',', index_col=0)
 embeddings = embeddings.set_index('gene_id')
 
 predictive_models = [ 

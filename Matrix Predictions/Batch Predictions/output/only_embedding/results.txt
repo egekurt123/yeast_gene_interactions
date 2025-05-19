@@ -1,0 +1,156 @@
+Results for dataset ExE
+==================================================
+==================================================
+
+Top Genes for Model: Ridge
+Average R²: -0.4315
+          Gene  R2 Score
+   TSA_YDR311W -0.167553
+ TSA_YDR145W.2 -0.301635
+   TSA_YMR168C -0.322693
+   TSA_YJL001W -0.323235
+   TSA_YIL046W -0.507489
+   TSA_YPL190C -0.694655
+ TSA_YBL034C.3 -0.703484
+==================================================
+
+Top Genes for Model: Lasso
+Average R²: -0.6872
+          Gene  R2 Score
+ TSA_YDR145W.2 -0.276209
+   TSA_YJL001W -0.280359
+   TSA_YMR168C -0.578066
+   TSA_YDR311W -0.612996
+   TSA_YIL046W -0.672588
+ TSA_YBL034C.3 -1.046982
+   TSA_YPL190C -1.343389
+==================================================
+
+Top Genes for Model: RandomForestRegressor
+Average R²: -0.1614
+          Gene  R2 Score
+   TSA_YDR311W  0.064901
+   TSA_YMR168C -0.023591
+   TSA_YJL001W -0.093479
+ TSA_YDR145W.2 -0.173276
+   TSA_YIL046W -0.178749
+   TSA_YPL190C -0.308326
+ TSA_YBL034C.3 -0.417585
+==================================================
+Results for dataset ExN
+==================================================
+==================================================
+
+Top Genes for Model: Ridge
+Average R²: -0.6452
+          Gene  R2 Score
+   TSA_YLR071C -0.465938
+ TSA_YFL039C.4 -0.512278
+ TSA_YPL233W.1 -0.543769
+   TSA_YHR101C -0.570445
+   TSA_YBR135W -0.627703
+ TSA_YOR244W.1 -0.773972
+   TSA_YHR058C -1.022597
+==================================================
+
+Top Genes for Model: Lasso
+Average R²: -0.2717
+          Gene  R2 Score
+ TSA_YPL233W.1 -0.162200
+ TSA_YOR244W.1 -0.202841
+   TSA_YHR101C -0.246840
+   TSA_YLR071C -0.253757
+ TSA_YFL039C.4 -0.282555
+   TSA_YHR058C -0.325815
+   TSA_YBR135W -0.428215
+==================================================
+
+Top Genes for Model: RandomForestRegressor
+Average R²: -0.1589
+          Gene  R2 Score
+ TSA_YFL039C.4 -0.029246
+   TSA_YLR071C -0.038844
+   TSA_YHR101C -0.051985
+   TSA_YBR135W -0.072682
+ TSA_YOR244W.1 -0.085161
+   TSA_YHR058C -0.397931
+ TSA_YPL233W.1 -0.436122
+==================================================
+Results for dataset NxN
+==================================================
+==================================================
+
+Top Genes for Model: Ridge
+Average R²: -0.4180
+          Gene  R2 Score
+   DMA_YBL102W -0.127794
+   DMA_YBR009C -0.202537
+   DMA_YAL065C -0.207279
+   DMA_YGR089W -0.268025
+   DMA_YBR075W -0.294822
+   DMA_YMR147W -0.296301
+   DMA_YJR098C -0.302143
+   DMA_YLL062C -0.314223
+   DMA_YGR281W -0.337684
+   DMA_YBR090C -0.339922
+   DMA_YDL065C -0.356182
+   DMA_YLR003C -0.365090
+ DMA_YKL053C-A -0.366813
+   DMA_YFR033C -0.368448
+   DMA_YDL172C -0.370481
+   DMA_YLL029W -0.373037
+   DMA_YDR007W -0.384164
+   DMA_YPL164C -0.390456
+   DMA_YPL259C -0.407121
+   DMA_YDL024C -0.422525
+==================================================
+
+Top Genes for Model: Lasso
+Average R²: -0.0633
+        Gene  R2 Score
+ DMA_YBL102W  0.010963
+ DMA_YBR075W -0.000424
+ DMA_YBR009C -0.009788
+ DMA_YFR033C -0.011929
+ DMA_YGR089W -0.015094
+ DMA_YOR214C -0.015416
+ DMA_YAL065C -0.017908
+ DMA_YCR011C -0.025482
+ DMA_YLL062C -0.025783
+ DMA_YPL164C -0.025996
+ DMA_YBR090C -0.029502
+ DMA_YLR232W -0.033835
+ DMA_YJR098C -0.034402
+ DMA_YGL181W -0.038818
+ DMA_YMR105C -0.040225
+ DMA_YDL024C -0.045104
+ DMA_YJL164C -0.047276
+ DMA_YDR007W -0.049798
+ DMA_YLR003C -0.051004
+ DMA_YDL172C -0.053529
+==================================================
+
+Top Genes for Model: RandomForestRegressor
+Average R²: -0.0944
+        Gene  R2 Score
+ DMA_YFR033C  0.005890
+ DMA_YDL024C -0.010208
+ DMA_YOR214C -0.020720
+ DMA_YJR098C -0.021363
+ DMA_YLL029W -0.022987
+ DMA_YLR003C -0.030085
+ DMA_YDL065C -0.036213
+ DMA_YKL053W -0.043302
+ DMA_YFR047C -0.048632
+ DMA_YDL172C -0.050535
+ DMA_YJL164C -0.051564
+ DMA_YAL065C -0.052369
+ DMA_YOR132W -0.060199
+ DMA_YKL214C -0.061507
+ DMA_YLL062C -0.067722
+ DMA_YCR011C -0.068028
+ DMA_YLR232W -0.069911
+ DMA_YKL093W -0.070988
+ DMA_YPL164C -0.071761
+ DMA_YBR090C -0.073462
+==================================================
