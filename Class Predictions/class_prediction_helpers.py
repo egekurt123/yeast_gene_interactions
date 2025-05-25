@@ -72,7 +72,7 @@ def per_class_metrics(y_true, y_pred):
 
 
 def get_class_predictions_balanced(embeddings):
-    
+
     dataset = embeddings.merge(classes, left_index=True, right_index=True)
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
@@ -81,8 +81,8 @@ def get_class_predictions_balanced(embeddings):
     essential = data[data.iloc[:, -1] == 1]
     nonessential = data[data.iloc[:, -1] == 0]
 
-    nonessential_downsampled = nonessential.sample(n=len(essential), random_state=42)
-    balanced_data = pd.concat([essential, nonessential_downsampled])
+    essential_upsampled = essential.sample(n=len(nonessential), replace=True, random_state=42)
+    balanced_data = pd.concat([essential_upsampled, nonessential])
 
     balanced_data = balanced_data.sample(frac=1, random_state=42)
 
