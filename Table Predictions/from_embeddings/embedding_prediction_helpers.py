@@ -12,7 +12,7 @@ import xgboost as xgb
 interaction_table = pd.read_csv('../../extracted_data/interaction_table_all.csv', sep=',', index_col=0)
 interaction_table
 
-def preprocess_data(interaction_table, embeddings, orthologous_groups = False):
+def preprocess_data(embeddings, orthologous_groups = False):
     available_genes = set(embeddings.index)
     filtered = interaction_table[
         interaction_table['query_gene'].isin(available_genes) &
@@ -27,14 +27,11 @@ def preprocess_data(interaction_table, embeddings, orthologous_groups = False):
         for _, row in filtered_sample.iterrows()
     ])
 
-    if orthologous_groups
-
-
     y = filtered_sample['gi_score'].values
     
     return X, y
 
-def run_Linear_Regression(X, y, color):
+def run_Linear_Regression(X, y, color, plot=True, pca=False):
     random.seed(38)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -42,18 +39,23 @@ def run_Linear_Regression(X, y, color):
     lm = LinearRegression().fit(X_train, y_train)
     y_pred = lm.predict(X_test)
 
+    if pca:
+        print("Linear Regression with PCA")
+    else:
+        print("Linear Regression")
+
     print('R2: ', lm.score(X_test, y_test))
     print("RMSE:", np.sqrt(mean_squared_error(y_test, y_pred)))
 
-    plt.scatter(y_pred, y_test, alpha=0.5, c=color)
-    plt.xlabel("y-pred", fontsize=12)
-    plt.ylabel("y-true", fontsize=12)
-    plt.title("Linear Regression Predictions", fontweight='bold', fontsize=14, pad=10)
-    plt.show()
+    if plot:
+        plt.scatter(y_pred, y_test, alpha=0.5, c=color)
+        plt.xlabel("y-pred", fontsize=12)
+        plt.ylabel("y-true", fontsize=12)
+        plt.title("Linear Regression Predictions", fontweight='bold', fontsize=14, pad=10)
+        plt.show()
 
 
 def run_PCA(X):
-    # Check what is the percentage of the variance explained by compressed data compared to the full data 
     N=128
     pca = PCA(n_components=N)
     X_PCA = pca.fit_transform(X.copy())
@@ -63,7 +65,7 @@ def run_PCA(X):
     return X_PCA
 
 
-def run_XGBoost(X, y):
+def run_XGBoost(X, y, plot=True):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=43)
 
     xgb_model = xgb.XGBRegressor(
@@ -79,16 +81,18 @@ def run_XGBoost(X, y):
     r2 = r2_score(y_test, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
+    print("XGBoost Regression")
     print(f"XGBoost R² score: {r2:.3f}")
     print(f"XGBoost RMSE: {rmse:.3f}")
 
-    plt.figure(figsize=(10, 6))
-    xgb.plot_importance(xgb_model, max_num_features=20)
-    plt.title('XGBoost Feature Importance')
-    plt.show()
+    if plot:
+        plt.figure(figsize=(10, 6))
+        xgb.plot_importance(xgb_model, max_num_features=20)
+        plt.title('XGBoost Feature Importance')
+        plt.show()
 
 
-def run_Random_Forest(X, y, embeddings):
+def run_Random_Forest(X, y, embeddings, plot=True):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     rf_model = RandomForestRegressor(
@@ -105,6 +109,7 @@ def run_Random_Forest(X, y, embeddings):
     r2 = r2_score(y_test, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
+    print("Random Forest Regression")
     print(f"Random Forest R² score: {r2:.3f}")
     print(f"Random Forest RMSE: {rmse:.3f}")
 
@@ -118,8 +123,25 @@ def run_Random_Forest(X, y, embeddings):
     importances = rf_model.feature_importances_
     indices = np.argsort(importances)[-20:] 
 
-    plt.barh(range(len(indices)), importances[indices])
-    plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
-    plt.title('Random Forest Feature Importance')
-    plt.tight_layout()
-    plt.show()
+    if plot:
+        plt.barh(range(len(indices)), importances[indices])
+        plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
+        plt.title('Random Forest Feature Importance')
+        plt.tight_layout()
+        plt.show()
+
+def predict_all_models(embeddings, combination):
+
+    print("Running for combination:", combination)
+
+    X,y = preprocess_data(embeddings)
+
+    run_Linear_Regression(X, y, "darkblue", plot=False, pca=False)
+
+    X_PCA = run_PCA(X)
+
+    run_Linear_Regression(X_PCA, y, "darkred", plot=False, pca=True)
+
+    run_XGBoost(X, y, plot=False)
+
+    run_Random_Forest(X, y, embeddings, plot=False)
