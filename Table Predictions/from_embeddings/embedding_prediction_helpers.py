@@ -50,8 +50,11 @@ def run_Linear_Regression(X, y, color, plot=True, pca=False):
     else:
         print("Linear Regression")
 
-    print('R2: ', lm.score(X_test, y_test))
-    print("RMSE:", np.sqrt(mean_squared_error(y_test, y_pred)))
+    r2 = lm.score(X_test, y_test)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+    print(f"R2: {r2:.3f}")
+    print(f"RMSE: {rmse:.3f}")
 
     if plot:
         plt.scatter(y_pred, y_test, alpha=0.5, c=color)
@@ -125,8 +128,8 @@ def run_Random_Forest(X, y, embeddings, plot=True):
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
     print("Random Forest Regression")
-    print(f"Random Forest R² score: {r2:.3f}")
-    print(f"Random Forest RMSE: {rmse:.3f}")
+    print(f"R2: {r2:.3f}")
+    print(f"RMSE: {rmse:.3f}")
 
 
     if plot:
