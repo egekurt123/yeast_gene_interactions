@@ -1,13 +1,16 @@
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error, classification_report, confusion_matrix
 from sklearn.linear_model import Ridge, LinearRegression
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import random
 import xgboost as xgb
+import seaborn as sns
+
+
 
 
 def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'gi_score', subfolder=True):
@@ -36,6 +39,31 @@ def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'g
     y = filtered_sample[prediction_type].values
     
     return X, y
+
+
+def preprocess_data_classification(embeddings, subfolder=True):
+
+    X, y = preprocess_data(embeddings, prediction_type='gi_score', subfolder=subfolder)
+
+    y = gi_score_to_class(y)
+
+    return X, y
+    
+
+
+
+def gi_score_to_class(gi_scores, pos_thresh=0.08, neg_thresh=-0.08):
+    """
+    Map gi_scores to classes:
+    - 1: positive (gi_score > pos_thresh)
+    - -1: negative (gi_score < neg_thresh)
+    - 0: neutral (otherwise)
+    """
+    classes = np.ones_like(gi_scores, dtype=int)
+    classes[gi_scores > pos_thresh] = 0
+    classes[gi_scores < neg_thresh] = 2
+    return classes
+
 
 def run_Linear_Regression(X, y, color, plot=True, pca=False):
     random.seed(38)
@@ -171,3 +199,59 @@ def predict_all_models(embeddings, combination, prediction_type='gi_score'):
     run_Random_Forest(X, y, embeddings, plot=False)
     print("\n")
 
+
+def run_RandomForest_Classifier(X, y, plot=True):
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import classification_report, confusion_matrix
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+
+    print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
+
+    if plot:
+        import seaborn as sns
+        sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d')
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        plt.title('Random Forest Confusion Matrix')
+        plt.show()
+
+
+def run_RandomForest_Classifier(X, y, plot=True):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+
+    print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
+
+    if plot:
+        sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d')
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        plt.title('Random Forest Confusion Matrix')
+        plt.show()
+
+def run_XGBoost_Classifier(X, y, plot=True):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    clf = xgb.XGBClassifier(n_estimators=100, max_depth=10, learning_rate=0.1, random_state=42, eval_metric='mlogloss')
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+
+    print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
+
+    if plot:
+        sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d')
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        plt.title('XGBoost Confusion Matrix')
+        plt.show()
