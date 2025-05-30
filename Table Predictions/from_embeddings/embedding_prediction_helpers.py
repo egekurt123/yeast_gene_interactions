@@ -258,18 +258,19 @@ def run_XGBoost_Classifier(X, y, plot=True):
 
 
 def gene_based_train_test_split(
-    interaction_table, 
-    embeddings, 
-    holdout_genes=None, 
-    prediction_type='gi_score', 
-    holdout_fraction=0.2, 
-    random_state=42
-):
+    embeddings,
+    interaction_table,
+    holdout_genes=None,
+    prediction_type='dmf',
+    holdout_fraction=0.2,
+    random_state=42):
     available_genes = set(embeddings.index)
     filtered = interaction_table[
         interaction_table['query_gene'].isin(available_genes) &
         interaction_table['array_gene'].isin(available_genes)
     ].copy()
+
+    filtered = filtered.sample(n=10000, random_state=random_state)
 
     if holdout_genes is None:
         all_genes = pd.unique(filtered[['query_gene', 'array_gene']].values.ravel())
@@ -304,18 +305,39 @@ def gene_based_train_test_split(
     return X_train, X_test, y_train, y_test
 
 
-def run_XGBoost_Classifier_splitted(embeddings, interaction_table , plot=True):
-    X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, interaction_table, test_size=0.2, random_state=42)
-    clf = xgb.XGBClassifier(n_estimators=100, max_depth=10, learning_rate=0.1, random_state=42, eval_metric='mlogloss')
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
+def run_XGBoost_Classifier_splitted(embeddings, plot=True):
 
-    print(classification_report(y_test, y_pred))
-    print(confusion_matrix(y_test, y_pred))
+    interaction_table = pd.read_csv('../../extracted_data/interaction_table_all.csv', sep=',', index_col=0)
+
+    X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, interaction_table, random_state=42)
+    
+    xgb_model = xgb.XGBRegressor(
+        n_estimators=100,
+        learning_rate=0.1,
+        max_depth=5,
+        random_state=42
+    )
+    xgb_model.fit(X_train, y_train)
+
+    y_pred = xgb_model.predict(X_test)
+
+    r2 = r2_score(y_test, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+    print("XGBoost Regression")
+    print(f"R2: {r2:.3f}")
+    print(f"RMSE: {rmse:.3f}")
 
     if plot:
-        sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d')
-        plt.xlabel('Predicted')
-        plt.ylabel('True')
-        plt.title('XGBoost Confusion Matrix')
+        emb_cols = embeddings.columns.tolist()
+        feature_names = [f"query_{col}" for col in emb_cols] + [f"array_{col}" for col in emb_cols]
+        
+        importances = xgb_model.feature_importances_
+        indices = np.argsort(importances)[-20:]
+        
+        plt.figure(figsize=(10, 6))
+        plt.barh(range(len(indices)), importances[indices])
+        plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
+        plt.title('XGBoost Feature Importance')
+        plt.tight_layout()
         plt.show()
