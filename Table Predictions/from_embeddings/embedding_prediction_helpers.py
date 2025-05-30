@@ -255,3 +255,67 @@ def run_XGBoost_Classifier(X, y, plot=True):
         plt.ylabel('True')
         plt.title('XGBoost Confusion Matrix')
         plt.show()
+
+
+def gene_based_train_test_split(
+    interaction_table, 
+    embeddings, 
+    holdout_genes=None, 
+    prediction_type='gi_score', 
+    holdout_fraction=0.2, 
+    random_state=42
+):
+    available_genes = set(embeddings.index)
+    filtered = interaction_table[
+        interaction_table['query_gene'].isin(available_genes) &
+        interaction_table['array_gene'].isin(available_genes)
+    ].copy()
+
+    if holdout_genes is None:
+        all_genes = pd.unique(filtered[['query_gene', 'array_gene']].values.ravel())
+        rng = np.random.default_rng(random_state)
+        rng.shuffle(all_genes)
+        # Select genes until at least holdout_fraction of rows are covered
+        selected = set()
+        covered = np.zeros(len(filtered), dtype=bool)
+        i = 0
+        while covered.mean() < holdout_fraction and i < len(all_genes):
+            selected.add(all_genes[i])
+            covered = covered | (filtered['query_gene'].isin(selected) | filtered['array_gene'].isin(selected))
+            i += 1
+        holdout_genes = list(selected)
+        print(f"Randomly selected {len(holdout_genes)} holdout genes to cover ~{holdout_fraction*100:.0f}% of data.")
+
+    test_mask = filtered['query_gene'].isin(holdout_genes) | filtered['array_gene'].isin(holdout_genes)
+    test_df = filtered[test_mask]
+    train_df = filtered[~test_mask]
+
+    def make_X_y(df):
+        X = np.array([
+            np.concatenate([embeddings.loc[row['query_gene']].values,
+                            embeddings.loc[row['array_gene']].values])
+            for _, row in df.iterrows()
+        ])
+        y = df[prediction_type].values
+        return X, y
+
+    X_train, y_train = make_X_y(train_df)
+    X_test, y_test = make_X_y(test_df)
+    return X_train, X_test, y_train, y_test
+
+
+def run_XGBoost_Classifier_splitted(embeddings, interaction_table , plot=True):
+    X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, interaction_table, test_size=0.2, random_state=42)
+    clf = xgb.XGBClassifier(n_estimators=100, max_depth=10, learning_rate=0.1, random_state=42, eval_metric='mlogloss')
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+
+    print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
+
+    if plot:
+        sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d')
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        plt.title('XGBoost Confusion Matrix')
+        plt.show()
