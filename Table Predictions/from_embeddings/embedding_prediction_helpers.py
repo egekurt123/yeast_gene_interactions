@@ -11,12 +11,8 @@ import xgboost as xgb
 import seaborn as sns
 
 
-
-
 def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'gi_score', subfolder=True):
-
     path = '../../extracted_data/interaction_table_all.csv'
-
     if subfolder:
         path = '../' + path
 
@@ -42,11 +38,8 @@ def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'g
 
 
 def preprocess_data_classification(embeddings, subfolder=True):
-
     X, y = preprocess_data(embeddings, prediction_type='gi_score', subfolder=subfolder)
-
     y = gi_score_to_class(y)
-
     return X, y
     
 
@@ -65,10 +58,13 @@ def gi_score_to_class(gi_scores, pos_thresh=0.08, neg_thresh=-0.08):
     return classes
 
 
-def run_Linear_Regression(X, y, color, plot=True, pca=False):
+def run_Linear_Regression(X=None , y=None, color="blue", plot=True, pca=False, gene_holdout=False, embeddings=None):
     random.seed(38)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    if gene_holdout:
+        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42, pca=True)
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     lm = LinearRegression().fit(X_train, y_train)
     y_pred = lm.predict(X_test)
@@ -103,8 +99,12 @@ def run_PCA(X, plot=True):
     return X_PCA
 
 
-def run_XGBoost(X, y, embeddings=None, plot=True):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=43)
+def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False):
+
+    if gene_holdout:
+        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     xgb_model = xgb.XGBRegressor(
         n_estimators=100,
@@ -138,8 +138,12 @@ def run_XGBoost(X, y, embeddings=None, plot=True):
         plt.show()
 
 
-def run_Random_Forest(X, y, embeddings, plot=True):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def run_Random_Forest(X=None, y=None, embeddings=None, plot=True, gene_holdout=False):
+    
+    if gene_holdout:
+        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     rf_model = RandomForestRegressor(
         n_estimators=100,
@@ -161,11 +165,9 @@ def run_Random_Forest(X, y, embeddings, plot=True):
 
 
     if plot:
-        # Add the column name
         emb_cols = embeddings.columns.tolist()
         n_emb_dims = len(emb_cols)
         feature_names = [f"query_{col}" for col in emb_cols] + [f"array_{col}" for col in emb_cols]
-        #######################
 
         plt.figure(figsize=(10, 6))
         importances = rf_model.feature_importances_
@@ -176,6 +178,7 @@ def run_Random_Forest(X, y, embeddings, plot=True):
         plt.title('Random Forest Feature Importance')
         plt.tight_layout()
         plt.show()
+
 
 def predict_all_models(embeddings, combination, prediction_type='gi_score'):
 
@@ -201,11 +204,6 @@ def predict_all_models(embeddings, combination, prediction_type='gi_score'):
 
 
 def run_RandomForest_Classifier(X, y, plot=True):
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import classification_report, confusion_matrix
-    import matplotlib.pyplot as plt
-    import numpy as np
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
@@ -257,13 +255,10 @@ def run_XGBoost_Classifier(X, y, plot=True):
         plt.show()
 
 
-def gene_based_train_test_split(
-    embeddings,
-    interaction_table,
-    holdout_genes=None,
-    prediction_type='dmf',
-    holdout_fraction=0.2,
-    random_state=42):
+def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fraction=0.2, random_state=42, pca=False):
+
+    interaction_table = pd.read_csv('../../extracted_data/interaction_table_all.csv', sep=',', index_col=0)
+
     available_genes = set(embeddings.index)
     filtered = interaction_table[
         interaction_table['query_gene'].isin(available_genes) &
@@ -272,20 +267,19 @@ def gene_based_train_test_split(
 
     filtered = filtered.sample(n=10000, random_state=random_state)
 
-    if holdout_genes is None:
-        all_genes = pd.unique(filtered[['query_gene', 'array_gene']].values.ravel())
-        rng = np.random.default_rng(random_state)
-        rng.shuffle(all_genes)
-        # Select genes until at least holdout_fraction of rows are covered
-        selected = set()
-        covered = np.zeros(len(filtered), dtype=bool)
-        i = 0
-        while covered.mean() < holdout_fraction and i < len(all_genes):
-            selected.add(all_genes[i])
-            covered = covered | (filtered['query_gene'].isin(selected) | filtered['array_gene'].isin(selected))
-            i += 1
-        holdout_genes = list(selected)
-        print(f"Randomly selected {len(holdout_genes)} holdout genes to cover ~{holdout_fraction*100:.0f}% of data.")
+    all_genes = pd.unique(filtered[['query_gene', 'array_gene']].values.ravel())
+    rng = np.random.default_rng(random_state)
+    rng.shuffle(all_genes)
+    # Select genes until at least holdout_fraction of rows are covered
+    selected = set()
+    covered = np.zeros(len(filtered), dtype=bool)
+    i = 0
+    while covered.mean() < holdout_fraction and i < len(all_genes):
+        selected.add(all_genes[i])
+        covered = covered | (filtered['query_gene'].isin(selected) | filtered['array_gene'].isin(selected))
+        i += 1
+    holdout_genes = list(selected)
+    print(f"Randomly selected {len(holdout_genes)} holdout genes to cover ~{holdout_fraction*100:.0f}% of data.")
 
     test_mask = filtered['query_gene'].isin(holdout_genes) | filtered['array_gene'].isin(holdout_genes)
     test_df = filtered[test_mask]
@@ -302,42 +296,9 @@ def gene_based_train_test_split(
 
     X_train, y_train = make_X_y(train_df)
     X_test, y_test = make_X_y(test_df)
+
+    if pca:
+        X_train = run_PCA(X_train, plot=False)
+        X_test = run_PCA(X_test, plot=False)
+
     return X_train, X_test, y_train, y_test
-
-
-def run_XGBoost_Classifier_splitted(embeddings, plot=True):
-
-    interaction_table = pd.read_csv('../../extracted_data/interaction_table_all.csv', sep=',', index_col=0)
-
-    X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, interaction_table, random_state=42)
-    
-    xgb_model = xgb.XGBRegressor(
-        n_estimators=100,
-        learning_rate=0.1,
-        max_depth=5,
-        random_state=42
-    )
-    xgb_model.fit(X_train, y_train)
-
-    y_pred = xgb_model.predict(X_test)
-
-    r2 = r2_score(y_test, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-
-    print("XGBoost Regression")
-    print(f"R2: {r2:.3f}")
-    print(f"RMSE: {rmse:.3f}")
-
-    if plot:
-        emb_cols = embeddings.columns.tolist()
-        feature_names = [f"query_{col}" for col in emb_cols] + [f"array_{col}" for col in emb_cols]
-        
-        importances = xgb_model.feature_importances_
-        indices = np.argsort(importances)[-20:]
-        
-        plt.figure(figsize=(10, 6))
-        plt.barh(range(len(indices)), importances[indices])
-        plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
-        plt.title('XGBoost Feature Importance')
-        plt.tight_layout()
-        plt.show()
