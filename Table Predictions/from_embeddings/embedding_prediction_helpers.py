@@ -62,7 +62,7 @@ def run_Linear_Regression(X=None , y=None, color="blue", plot=True, pca=False, g
     random.seed(38)
 
     if gene_holdout:
-        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42, pca=True)
+        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -97,6 +97,33 @@ def run_PCA(X, plot=True):
         print(ev[-1])
         plt.plot(range(0, N), ev)
     return X_PCA
+
+
+def run_Ridge_Regression(X=None , y=None, color="blue", plot=True, gene_holdout=False, embeddings=None, alpha=10.0):
+    random.seed(38)
+
+    if gene_holdout:
+        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    ridge_model = Ridge(alpha=alpha, random_state=42).fit(X_train, y_train)
+    y_pred = ridge_model.predict(X_test)
+ 
+    print("Ridge Regression")
+
+    r2 = ridge_model.score(X_test, y_test)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+    print(f"R2: {r2:.3f}")
+    print(f"RMSE: {rmse:.3f}")
+
+    if plot:
+        plt.scatter(y_pred, y_test, alpha=0.5, c=color)
+        plt.xlabel("y-pred", fontsize=12)
+        plt.ylabel("y-true", fontsize=12)
+        plt.title("Ridge Regression Predictions", fontweight='bold', fontsize=14, pad=10)
+        plt.show()
 
 
 def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False):
@@ -195,6 +222,8 @@ def predict_all_models(embeddings, combination, prediction_type='gi_score'):
     run_Linear_Regression(X_PCA, y, "darkred", plot=False, pca=True)
     print("\n")
 
+    run_Ridge_Regression(X, y, "darkred", plot=False, alpha=200.0)
+    print("\n")
 
     run_XGBoost(X, y, plot=False)
     print("\n")
@@ -255,7 +284,7 @@ def run_XGBoost_Classifier(X, y, plot=True):
         plt.show()
 
 
-def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fraction=0.2, random_state=42, pca=False):
+def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fraction=0.2, random_state=42):
 
     interaction_table = pd.read_csv('../../extracted_data/interaction_table_all.csv', sep=',', index_col=0)
 
@@ -296,9 +325,5 @@ def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fract
 
     X_train, y_train = make_X_y(train_df)
     X_test, y_test = make_X_y(test_df)
-
-    if pca:
-        X_train = run_PCA(X_train, plot=False)
-        X_test = run_PCA(X_test, plot=False)
 
     return X_train, X_test, y_train, y_test
