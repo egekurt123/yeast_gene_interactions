@@ -87,6 +87,8 @@ def run_Linear_Regression(X=None , y=None, color="blue", plot=True, pca=False, g
         plt.title("Linear Regression Predictions", fontweight='bold', fontsize=14, pad=10)
         plt.show()
 
+    return r2
+
 
 def run_PCA(X, plot=True):
     N=128
@@ -124,6 +126,8 @@ def run_Ridge_Regression(X=None , y=None, color="blue", plot=True, gene_holdout=
         plt.ylabel("y-true", fontsize=12)
         plt.title("Ridge Regression Predictions", fontweight='bold', fontsize=14, pad=10)
         plt.show()
+    
+    return r2
 
 
 def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False):
@@ -163,6 +167,8 @@ def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False)
         plt.title('XGBoost Feature Importance')
         plt.tight_layout()
         plt.show()
+
+    return r2
 
 
 def run_Random_Forest(X=None, y=None, embeddings=None, plot=True, gene_holdout=False):
@@ -206,6 +212,8 @@ def run_Random_Forest(X=None, y=None, embeddings=None, plot=True, gene_holdout=F
         plt.tight_layout()
         plt.show()
 
+    return r2
+
 
 def predict_all_models(embeddings, combination, prediction_type='gi_score'):
 
@@ -214,23 +222,24 @@ def predict_all_models(embeddings, combination, prediction_type='gi_score'):
 
     X,y = preprocess_data(embeddings, prediction_type=prediction_type, subfolder=False)
 
-    run_Linear_Regression(X, y, "darkblue", plot=False, pca=False)
+    r2_linear = run_Linear_Regression(X, y, "darkblue", plot=False, pca=False)
     print("\n")
 
     X_PCA = run_PCA(X, plot=False)
 
-    run_Linear_Regression(X_PCA, y, "darkred", plot=False, pca=True)
+    r2_linear_pca= run_Linear_Regression(X_PCA, y, "darkred", plot=False, pca=True)
     print("\n")
 
-    run_Ridge_Regression(X, y, "darkred", plot=False, alpha=200.0)
+    r2_ridge = run_Ridge_Regression(X, y, "darkred", plot=False, alpha=200.0)
     print("\n")
 
-    run_XGBoost(X, y, plot=False)
+    r2_xgboost = run_XGBoost(X, y, plot=False)
     print("\n")
 
-    run_Random_Forest(X, y, embeddings, plot=False)
+    r2_randomforest = run_Random_Forest(X, y, embeddings, plot=False)
     print("\n")
 
+    return [r2_linear_pca, r2_ridge, r2_xgboost, r2_randomforest]
 
 def run_RandomForest_Classifier(X, y, plot=True):
 
@@ -327,3 +336,63 @@ def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fract
     X_test, y_test = make_X_y(test_df)
 
     return X_train, X_test, y_train, y_test
+
+
+def plot_r2_combinations(dnalm_comb=[], dnalm_yeastnet_comb=[], dnalm_genex_comb=[], dnalm_yeastnet_genex_comb=[]):
+
+    datasets = ['DNALM', 'DNALM + YeastNet', 'DNALM + Gene Expr', 'DNALM + YeastNet\n+ Gene Expressions']
+    models = ['Linear Regression with PCA', 'Ridge Regression', 'XGBoost Regression', 'Random Forest Regression']
+
+    r2_data = {
+        'DNALM': dnalm_comb,
+        'DNALM + YeastNet': dnalm_yeastnet_comb,
+        'DNALM + Gene Expr': dnalm_genex_comb,
+        'DNALM + YeastNet\n+ Gene Expressions': dnalm_yeastnet_genex_comb
+    }
+
+    colors = ['skyblue', 'lightgreen', 'orange', 'lightcoral']
+
+    fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+
+    x = np.arange(len(datasets))
+    width = 0.2
+
+    for i, model in enumerate(models):
+        model_scores = [r2_data[dataset][i] for dataset in datasets]
+        bars = ax.bar(x + i*width, model_scores, width, label=model, color=colors[i], alpha=0.8)
+
+        for bar, score in zip(bars, model_scores):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height + 0.005,
+                     f'{score:.3f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+    ax.set_ylabel('R² Score', fontsize=12)
+    ax.set_title('R² Scores Across Dataset Combinations', fontweight='bold', fontsize=14)
+    ax.set_xticks(x + width * 1.5)
+    ax.set_xticklabels(datasets, rotation=45, ha='right')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.3)
+    ax.set_ylim(0, 0.6)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def predict_all_models_holdout(embeddings, combination, prediction_type='dmf'):
+
+    print("Running for combination:", combination)
+    print("\n")
+
+    r2_linear = run_Linear_Regression(embeddings=embeddings, gene_holdout=True, color='darkblue', plot=False)
+    print("\n")
+
+    r2_ridge = run_Ridge_Regression(embeddings=embeddings, gene_holdout=True, color='darkblue', alpha=200.0, plot=False)
+    print("\n")
+
+    r2_xgboost = run_XGBoost(embeddings=embeddings, gene_holdout=True, plot=False)
+    print("\n")
+
+    r2_randomforest = run_Random_Forest(embeddings=embeddings, gene_holdout=True, plot=False)
+    print("\n")
+
+    return [0, r2_ridge, r2_xgboost, r2_randomforest]
