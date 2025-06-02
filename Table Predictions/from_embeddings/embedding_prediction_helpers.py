@@ -155,7 +155,7 @@ def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False)
     print(f"RMSE: {rmse:.3f}")
 
     if plot:
-        plot_feature_importance(embeddings.columns.tolist(), xgb_model.feature_importances_)
+        plot_feature_importance(embeddings.columns.tolist(), xgb_model.feature_importances_, "XGBoost Regression")
 
     return r2
 
@@ -186,21 +186,23 @@ def run_Random_Forest(X=None, y=None, embeddings=None, plot=True, gene_holdout=F
     print(f"RMSE: {rmse:.3f}")
 
     if plot:
-        plot_feature_importance(embeddings.columns.tolist(), rf_model.feature_importances_)
+        plot_feature_importance(embeddings.columns.tolist(), rf_model.feature_importances_, "Random Forest")
 
     return r2
 
 
-def plot_feature_importance(emb_cols, importances, top_n=20):
-    # Combine importances for query and array columns
+def plot_feature_importance(emb_cols, importances, model, top_n=20):
     n_dims = len(emb_cols)
     combined_importances = importances[:n_dims] + importances[n_dims:]
     indices = np.argsort(combined_importances)[-20:]
     
+    colors = ['#003f5c' if 'Turco' in emb_cols[i] else '#bc5090' if 'yeastnet' in emb_cols[i] else '#ffa600' for i in indices]
+    
     plt.figure(figsize=(10, 6))
-    plt.barh(range(len(indices)), combined_importances[indices])
-    plt.yticks(range(len(indices)), [emb_cols[i] for i in indices])
-    plt.title('XGBoost Feature Importance')
+    plt.barh(range(len(indices)), combined_importances[indices], color=colors)
+    plt.yticks(range(len(indices)), [emb_cols[i] for i in indices], fontweight='bold')
+    plt.gca().tick_params(axis='y', pad=10)
+    plt.title(model + ' Feature Importance')
     plt.tight_layout()
     plt.show()
 
