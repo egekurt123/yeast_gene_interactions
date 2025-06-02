@@ -155,18 +155,7 @@ def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False)
     print(f"RMSE: {rmse:.3f}")
 
     if plot:
-        emb_cols = embeddings.columns.tolist()
-        feature_names = [f"query_{col}" for col in emb_cols] + [f"array_{col}" for col in emb_cols]
-        
-        importances = xgb_model.feature_importances_
-        indices = np.argsort(importances)[-20:]
-        
-        plt.figure(figsize=(10, 6))
-        plt.barh(range(len(indices)), importances[indices])
-        plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
-        plt.title('XGBoost Feature Importance')
-        plt.tight_layout()
-        plt.show()
+        plot_feature_importance(embeddings.columns.tolist(), xgb_model.feature_importances_)
 
     return r2
 
@@ -196,23 +185,24 @@ def run_Random_Forest(X=None, y=None, embeddings=None, plot=True, gene_holdout=F
     print(f"R2: {r2:.3f}")
     print(f"RMSE: {rmse:.3f}")
 
-
     if plot:
-        emb_cols = embeddings.columns.tolist()
-        n_emb_dims = len(emb_cols)
-        feature_names = [f"query_{col}" for col in emb_cols] + [f"array_{col}" for col in emb_cols]
-
-        plt.figure(figsize=(10, 6))
-        importances = rf_model.feature_importances_
-        indices = np.argsort(importances)[-20:] 
-
-        plt.barh(range(len(indices)), importances[indices])
-        plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
-        plt.title('Random Forest Feature Importance')
-        plt.tight_layout()
-        plt.show()
+        plot_feature_importance(embeddings.columns.tolist(), rf_model.feature_importances_)
 
     return r2
+
+
+def plot_feature_importance(emb_cols, importances, top_n=20):
+    # Combine importances for query and array columns
+    n_dims = len(emb_cols)
+    combined_importances = importances[:n_dims] + importances[n_dims:]
+    indices = np.argsort(combined_importances)[-20:]
+    
+    plt.figure(figsize=(10, 6))
+    plt.barh(range(len(indices)), combined_importances[indices])
+    plt.yticks(range(len(indices)), [emb_cols[i] for i in indices])
+    plt.title('XGBoost Feature Importance')
+    plt.tight_layout()
+    plt.show()
 
 
 def predict_all_models(embeddings, combination, prediction_type='gi_score'):
@@ -241,6 +231,7 @@ def predict_all_models(embeddings, combination, prediction_type='gi_score'):
 
     return [r2_linear_pca, r2_ridge, r2_xgboost, r2_randomforest]
 
+
 def run_RandomForest_Classifier(X, y, plot=True):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -259,22 +250,6 @@ def run_RandomForest_Classifier(X, y, plot=True):
         plt.title('Random Forest Confusion Matrix')
         plt.show()
 
-
-def run_RandomForest_Classifier(X, y, plot=True):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-
-    print(classification_report(y_test, y_pred))
-    print(confusion_matrix(y_test, y_pred))
-
-    if plot:
-        sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d')
-        plt.xlabel('Predicted')
-        plt.ylabel('True')
-        plt.title('Random Forest Confusion Matrix')
-        plt.show()
 
 def run_XGBoost_Classifier(X, y, plot=True):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
