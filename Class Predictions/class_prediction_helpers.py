@@ -171,3 +171,40 @@ def get_class_predictions_bootstrapped(embeddings, n_bootstraps=5):
             y_test, y_proba, ax=ax, name=f"{classifier.__class__.__name__}"
         )
         per_class_metrics(y_test, y_pred)
+
+
+def compare_prec_recalls(model, *embeddings_data):
+
+    classifier_map = {
+        'Logistic_Regression': LogisticRegression(),
+        'Random_Forests_Classifier': RandomForestClassifier(),
+    }
+    classifier = classifier_map[model]
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    for embeddings, name in embeddings_data:
+        dataset = embeddings.merge(classes, left_index=True, right_index=True)
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        
+        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+        
+        classifier = sklearn.base.clone(classifier)
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+        y_proba = classifier.predict_proba(X_test)[:, 1]
+        
+        PrecisionRecallDisplay.from_predictions(
+            y_test, y_proba, ax=ax, name=f"{name}"
+        )
+            
+    ax.set_title(f'Precision-Recall Curves - {model.replace("_", " ").title()}')
+    plt.tight_layout()
+    plt.show()
+
+
+
+
