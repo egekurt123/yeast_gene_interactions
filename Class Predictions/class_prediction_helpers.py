@@ -24,8 +24,8 @@ def get_class_predictions(embeddings):
 
 
     classifiers = [
-    RandomForestClassifier(100), 
-    LogisticRegression(max_iter=500)
+    RandomForestClassifier(), 
+    LogisticRegression()
     ]
 
     for classifier in classifiers:
@@ -94,8 +94,8 @@ def get_class_predictions_balanced(embeddings):
     y_train_bal = balanced_train.iloc[:, -1]
 
     classifiers = [
-        RandomForestClassifier(100), 
-        LogisticRegression(max_iter=500)
+        RandomForestClassifier(), 
+        LogisticRegression()
     ]
 
     fig, ax = plt.subplots()
@@ -127,8 +127,8 @@ def get_class_predictions_bootstrapped(embeddings, n_bootstraps=5):
         X, y, test_size=0.2, random_state=42, stratify=y)
     
     classifiers = [
-        RandomForestClassifier(100, random_state=42), 
-        LogisticRegression(max_iter=500, random_state=42)
+        RandomForestClassifier(), 
+        LogisticRegression()
     ]
     
     fig, ax = plt.subplots()
@@ -174,12 +174,11 @@ def get_class_predictions_bootstrapped(embeddings, n_bootstraps=5):
 
 
 def compare_prec_recalls(model, *embeddings_data):
-
     classifier_map = {
         'Logistic_Regression': LogisticRegression(),
         'Random_Forests_Classifier': RandomForestClassifier(),
     }
-    classifier = classifier_map[model]
+    base_classifier = classifier_map[model]
 
     fig, ax = plt.subplots(figsize=(10, 8))
     
@@ -192,7 +191,7 @@ def compare_prec_recalls(model, *embeddings_data):
             X, y, test_size=0.2, random_state=42, stratify=y
         )
         
-        classifier = sklearn.base.clone(classifier)
+        classifier = sklearn.base.clone(base_classifier)
         classifier.fit(X_train, y_train)
         y_pred = classifier.predict(X_test)
         y_proba = classifier.predict_proba(X_test)[:, 1]
@@ -205,6 +204,98 @@ def compare_prec_recalls(model, *embeddings_data):
     plt.tight_layout()
     plt.show()
 
+def compare_prec_recalls_balanced(model, *embeddings_data):
+    classifier_map = {
+        'Logistic_Regression': LogisticRegression(),
+        'Random_Forests_Classifier': RandomForestClassifier(),
+    }
+    
+    base_classifier = classifier_map[model]
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    for embeddings, name in embeddings_data:
+        dataset = embeddings.merge(classes, left_index=True, right_index=True)
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        
+        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+        
+        train_data = pd.concat([X_train, y_train], axis=1)
+        essential = train_data[train_data.iloc[:, -1] == 1]
+        nonessential = train_data[train_data.iloc[:, -1] == 0]
+        
+        essential_upsampled = essential.sample(n=len(nonessential), replace=True, random_state=42)
+        balanced_train = pd.concat([essential_upsampled, nonessential])
+        balanced_train = balanced_train.sample(frac=1, random_state=42)
+        
+        X_train_bal = balanced_train.iloc[:, :-1]
+        y_train_bal = balanced_train.iloc[:, -1]
+        
+        classifier = sklearn.base.clone(base_classifier)
+        classifier.fit(X_train_bal, y_train_bal)
+        y_pred = classifier.predict(X_test)
+        y_proba = classifier.predict_proba(X_test)[:, 1]
+        
+        PrecisionRecallDisplay.from_predictions(
+            y_test, y_proba, ax=ax, name=f"{name}"
+        )
+    
+    ax.set_title(f'Precision-Recall Curves (Balanced) - {model.replace("_", " ").title()}')
+    plt.tight_layout()
+    plt.show()
+
+
+def compare_prec_recalls_bootstrapped(model, n_bootstraps=5, *embeddings_data):
+    classifier_map = {
+        'Logistic_Regression': LogisticRegression(),
+        'Random_Forests_Classifier': RandomForestClassifier(),
+    }
+    
+    base_classifier = classifier_map[model]
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    for embeddings, name in embeddings_data:
+        dataset = embeddings.merge(classes, left_index=True, right_index=True)
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        
+        X_train_full, X_test, y_train_full, y_test = sklearn.model_selection.train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+        
+        all_probas = np.zeros((len(X_test), n_bootstraps))
+        
+        for i in range(n_bootstraps):
+            train_data = pd.concat([X_train_full, y_train_full], axis=1)
+            essential = train_data[train_data.iloc[:, -1] == 1]
+            nonessential = train_data[train_data.iloc[:, -1] == 0]
+            
+            essential_boot = essential.sample(n=len(essential), replace=True, random_state=i+42)
+            nonessential_boot = nonessential.sample(n=len(essential), replace=True, random_state=i+100)
+            
+            balanced_boot = pd.concat([essential_boot, nonessential_boot])
+            balanced_boot = balanced_boot.sample(frac=1, random_state=i)
+            
+            X_boot = balanced_boot.iloc[:, :-1]
+            y_boot = balanced_boot.iloc[:, -1]
+            
+            boot_clf = sklearn.base.clone(base_classifier)
+            boot_clf.fit(X_boot, y_boot)
+            
+            all_probas[:, i] = boot_clf.predict_proba(X_test)[:, 1]
+        
+        y_proba = all_probas.mean(axis=1)
+        y_pred = (y_proba >= 0.5).astype(int)
+        
+        PrecisionRecallDisplay.from_predictions(
+            y_test, y_proba, ax=ax, name=f"{name}"
+        )
+    
+    ax.set_title(f'Precision-Recall Curves (Bootstrapped) - {model.replace("_", " ").title()}')
+    plt.tight_layout()
+    plt.show()
 
 
 
