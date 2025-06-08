@@ -1,0 +1,84 @@
+Results for dataset ExE
+==================================================
+==================================================
+
+Top Genes for Model: Ridge
+Average R²: 0.3657
+         Gene  R2 Score
+TSA_YDL105W.3  0.780286
+TSA_YIR010W.1  0.775261
+TSA_YPL076W.1  0.765547
+  TSA_YHR191C  0.752660
+TSA_YML023C.2  0.746420
+TSA_YPL233W.1  0.738668
+  TSA_YGL093W  0.724211
+  TSA_YMR227C  0.723980
+  TSA_YDR236C  0.722194
+  TSA_YHR188C  0.721883
+  TSA_YDR086C  0.720141
+  TSA_YMR197C  0.713410
+  TSA_YHR036W  0.711920
+  TSA_YDR331W  0.710039
+  TSA_YGL207W  0.707615
+TSA_YFR004W.1  0.700942
+  TSA_YDR288W  0.696239
+  TSA_YDR510W  0.696045
+  TSA_YLR274W  0.694735
+  TSA_YFL008W  0.692825
+==================================================
+Results for dataset ExN
+==================================================
+==================================================
+
+Top Genes for Model: Ridge
+Average R²: 0.3418
+          Gene  R2 Score
+ TSA_YLR459W.2  0.787406
+   TSA_YGL093W  0.749567
+ TSA_YDR331W.1  0.742875
+ TSA_YBL034C.4  0.676560
+   TSA_YGR113W  0.672624
+ TSA_YFR004W.1  0.667910
+   TSA_YMR117C  0.663202
+   TSA_YBR211C  0.661553
+   TSA_YOR232W  0.653859
+   TSA_YGR274C  0.650658
+   TSA_YFR004W  0.644475
+ TSA_YDL102W.1  0.642258
+TSA_YFL039C.16  0.640396
+ TSA_YLR045C.1  0.639999
+ TSA_YGL093W.1  0.639278
+TSA_YFL039C.10  0.637211
+   TSA_YGR179C  0.634020
+ TSA_YFL008W.1  0.633668
+   TSA_YDR212W  0.628554
+ TSA_YLR045C.2  0.628516
+==================================================
+Results for dataset NxN
+==================================================
+==================================================
+
+Top Genes for Model: Ridge
+Average R²: 0.1941
+       Gene  R2 Score
+DMA_YDR150W  0.718742
+DMA_YJL154C  0.691890
+DMA_YDR485C  0.689009
+DMA_YDR274C  0.683526
+DMA_YLR192C  0.681330
+DMA_YDR334W  0.679221
+DMA_YMR272C  0.678489
+DMA_YNL041C  0.677221
+DMA_YDR149C  0.676932
+DMA_YNL064C  0.675544
+DMA_YNL051W  0.668281
+DMA_YML071C  0.667620
+DMA_YCR053W  0.659930
+DMA_YJL175W  0.656116
+DMA_YOL004W  0.647480
+DMA_YJL004C  0.646035
+DMA_YML041C  0.642978
+DMA_YGL168W  0.639307
+DMA_YFL031W  0.635303
+DMA_YHR030C  0.634154
+==================================================

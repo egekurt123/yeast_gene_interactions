@@ -48,9 +48,9 @@ def preprocess_data_classification(embeddings, subfolder=True):
 def gi_score_to_class(gi_scores, pos_thresh=0.08, neg_thresh=-0.08):
     """
     Map gi_scores to classes:
-    - 1: positive (gi_score > pos_thresh)
-    - -1: negative (gi_score < neg_thresh)
-    - 0: neutral (otherwise)
+    - 0: positive (gi_score > pos_thresh)
+    - 2: negative (gi_score < neg_thresh)
+    - 1: neutral (otherwise)
     """
     classes = np.ones_like(gi_scores, dtype=int)
     classes[gi_scores > pos_thresh] = 0
@@ -285,7 +285,6 @@ def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fract
     all_genes = pd.unique(filtered[['query_gene', 'array_gene']].values.ravel())
     rng = np.random.default_rng(random_state)
     rng.shuffle(all_genes)
-    # Select genes until at least holdout_fraction of rows are covered
     selected = set()
     covered = np.zeros(len(filtered), dtype=bool)
     i = 0
