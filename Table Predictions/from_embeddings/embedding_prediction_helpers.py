@@ -317,13 +317,13 @@ def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fract
 def plot_r2_combinations(dnalm_comb=[], dnalm_yeastnet_comb=[], dnalm_genex_comb=[], dnalm_yeastnet_genex_comb=[]):
 
     datasets = ['DNALM', 'DNALM + YeastNet', 'DNALM + Gene Expr', 'DNALM + YeastNet\n+ Gene Expressions']
-    models = ['Linear Regression with PCA', 'Ridge Regression', 'XGBoost Regression', 'Random Forest Regression']
+    models = ['Ridge Regression', 'XGBoost Regression', 'Random Forest Regression']
 
     r2_data = {
-        'DNALM': dnalm_comb,
-        'DNALM + YeastNet': dnalm_yeastnet_comb,
-        'DNALM + Gene Expr': dnalm_genex_comb,
-        'DNALM + YeastNet\n+ Gene Expressions': dnalm_yeastnet_genex_comb
+        'DNALM': dnalm_comb[-3:],
+        'DNALM + YeastNet': dnalm_yeastnet_comb[-3:],
+        'DNALM + Gene Expr': dnalm_genex_comb[-3:],
+        'DNALM + YeastNet\n+ Gene Expressions': dnalm_yeastnet_genex_comb[-3:]
     }
 
     colors = ['skyblue', 'lightgreen', 'orange', 'lightcoral']
