@@ -11,7 +11,7 @@ import xgboost as xgb
 import seaborn as sns
 
 
-def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'gi_score', subfolder=True):
+def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'gi_score', subfolder=True, batch=True):
     path = '../../extracted_data/interaction_table_all.csv'
     if subfolder:
         path = '../' + path
@@ -24,7 +24,10 @@ def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'g
         interaction_table['array_gene'].isin(available_genes)
     ].copy()
 
-    filtered_sample = filtered.sample(n=10000, random_state=42)
+    if batch:
+        filtered_sample = filtered.sample(n=10000, random_state=42)
+    else:
+        filtered_sample = filtered
 
     X = np.array([
         np.concatenate([embeddings.loc[row['query_gene']].values,
@@ -38,7 +41,7 @@ def preprocess_data(embeddings, orthologous_groups = False, prediction_type = 'g
 
 
 def preprocess_data_classification(embeddings, subfolder=True):
-    X, y = preprocess_data(embeddings, prediction_type='gi_score', subfolder=subfolder)
+    X, y = preprocess_data(embeddings, prediction_type='gi_score', subfolder=subfolder, batch=False)
     y = gi_score_to_class(y)
     return X, y
     
@@ -53,16 +56,19 @@ def gi_score_to_class(gi_scores, pos_thresh=0.08, neg_thresh=-0.08):
     - 1: neutral (otherwise)
     """
     classes = np.ones_like(gi_scores, dtype=int)
-    classes[gi_scores > pos_thresh] = 0
-    classes[gi_scores < neg_thresh] = 2
+    classes[gi_scores > pos_thresh] = 2
+    classes[gi_scores < neg_thresh] = 0
     return classes
 
 
-def run_Linear_Regression(X=None , y=None, color="blue", plot=True, pca=False, gene_holdout=False, embeddings=None):
+def run_Linear_Regression(X=None , y=None, color="blue", plot=True, pca=False, gene_holdout=False, gene_holdout_double=False, embeddings=None):
     random.seed(38)
 
     if gene_holdout:
-        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        if gene_holdout_double:
+            X_train, X_test, y_train, y_test = double_gene_holdout_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        else:
+            X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -101,11 +107,14 @@ def run_PCA(X, plot=True):
     return X_PCA
 
 
-def run_Ridge_Regression(X=None , y=None, color="blue", plot=True, gene_holdout=False, embeddings=None, alpha=10.0):
+def run_Ridge_Regression(X=None , y=None, color="blue", plot=True, gene_holdout=False, gene_holdout_double=False, embeddings=None, alpha=10.0):
     random.seed(38)
 
     if gene_holdout:
-        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        if gene_holdout_double:
+            X_train, X_test, y_train, y_test = double_gene_holdout_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        else:
+            X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -130,10 +139,13 @@ def run_Ridge_Regression(X=None , y=None, color="blue", plot=True, gene_holdout=
     return r2
 
 
-def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False):
+def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False, gene_holdout_double=False):
 
     if gene_holdout:
-        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        if gene_holdout_double:
+            X_train, X_test, y_train, y_test = double_gene_holdout_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        else:
+            X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -160,10 +172,13 @@ def run_XGBoost(X=None , y=None, embeddings=None, plot=True, gene_holdout=False)
     return r2
 
 
-def run_Random_Forest(X=None, y=None, embeddings=None, plot=True, gene_holdout=False):
+def run_Random_Forest(X=None, y=None, embeddings=None, plot=True, gene_holdout=False, gene_holdout_double=False):
     
     if gene_holdout:
-        X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        if gene_holdout_double:
+            X_train, X_test, y_train, y_test = double_gene_holdout_train_test_split(embeddings, prediction_type='dmf', random_state=42)
+        else:
+            X_train, X_test, y_train, y_test = gene_based_train_test_split(embeddings, prediction_type='dmf', random_state=42)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -314,6 +329,49 @@ def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fract
     return X_train, X_test, y_train, y_test
 
 
+def double_gene_holdout_train_test_split(embeddings, prediction_type='dmf', holdout_fraction=0.2, random_state=42):
+    interaction_table = pd.read_csv('../../extracted_data/interaction_table_all.csv', sep=',', index_col=0)
+
+    available_genes = set(embeddings.index)
+    filtered = interaction_table[
+        interaction_table['query_gene'].isin(available_genes) &
+        interaction_table['array_gene'].isin(available_genes)
+    ].copy()
+
+    filtered = filtered.sample(n=10000, random_state=random_state)
+
+    all_genes = pd.unique(filtered[['query_gene', 'array_gene']].values.ravel())
+    rng = np.random.default_rng(random_state)
+    rng.shuffle(all_genes)
+
+    n_holdout = int(len(all_genes) * holdout_fraction)
+    test_genes = set(all_genes[:n_holdout])
+    train_genes = set(all_genes[n_holdout:])
+
+    test_mask = filtered['query_gene'].isin(test_genes) & filtered['array_gene'].isin(test_genes)
+    train_mask = filtered['query_gene'].isin(train_genes) & filtered['array_gene'].isin(train_genes)
+
+    test_df = filtered[test_mask]
+    train_df = filtered[train_mask]
+
+    print(f"Train interactions: {len(train_df)}, Test interactions: {len(test_df)}")
+    print(f"Train genes: {len(train_genes)}, Test genes: {len(test_genes)}")
+
+    def make_X_y(df):
+        X = np.array([
+            np.concatenate([embeddings.loc[row['query_gene']].values,
+                            embeddings.loc[row['array_gene']].values])
+            for _, row in df.iterrows()
+        ])
+        y = df[prediction_type].values
+        return X, y
+
+    X_train, y_train = make_X_y(train_df)
+    X_test, y_test = make_X_y(test_df)
+
+    return X_train, X_test, y_train, y_test
+
+
 def plot_r2_combinations(dnalm_comb=[], dnalm_yeastnet_comb=[], dnalm_genex_comb=[], dnalm_yeastnet_genex_comb=[]):
 
     datasets = ['DNALM', 'DNALM + YeastNet', 'DNALM + Gene Expr', 'DNALM + YeastNet\n+ Gene Expressions']
@@ -369,6 +427,26 @@ def predict_all_models_holdout(embeddings, combination, prediction_type='dmf'):
     print("\n")
 
     r2_randomforest = run_Random_Forest(embeddings=embeddings, gene_holdout=True, plot=False)
+    print("\n")
+
+    return [0, r2_ridge, r2_xgboost, r2_randomforest]
+
+
+def predict_all_models_double_holdout(embeddings, combination, prediction_type='dmf'):
+
+    print("Running for combination:", combination)
+    print("\n")
+
+    r2_linear = run_Linear_Regression(embeddings=embeddings, gene_holdout=True, gene_holdout_double=True, color='darkblue', plot=False)
+    print("\n")
+
+    r2_ridge = run_Ridge_Regression(embeddings=embeddings, gene_holdout=True, gene_holdout_double=True, color='darkblue', alpha=200.0, plot=False)
+    print("\n")
+
+    r2_xgboost = run_XGBoost(embeddings=embeddings, gene_holdout=True, gene_holdout_double=True, plot=False)
+    print("\n")
+
+    r2_randomforest = run_Random_Forest(embeddings=embeddings, gene_holdout=True, gene_holdout_double=True, plot=False)
     print("\n")
 
     return [0, r2_ridge, r2_xgboost, r2_randomforest]
