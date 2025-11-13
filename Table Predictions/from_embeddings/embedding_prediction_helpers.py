@@ -51,13 +51,13 @@ def preprocess_data_classification(embeddings, subfolder=True):
 def gi_score_to_class(gi_scores, pos_thresh=0.08, neg_thresh=-0.08):
     """
     Map gi_scores to classes:
-    - 0: positive (gi_score > pos_thresh)
-    - 2: negative (gi_score < neg_thresh)
-    - 1: neutral (otherwise)
+    - 'positive': gi_score > pos_thresh
+    - 'negative': gi_score < neg_thresh
+    - 'neutral': otherwise
     """
-    classes = np.ones_like(gi_scores, dtype=int)
-    classes[gi_scores > pos_thresh] = 2
-    classes[gi_scores < neg_thresh] = 0
+    classes = np.array(['neutral'] * len(gi_scores), dtype=object)
+    classes[gi_scores > pos_thresh] = 'positive'
+    classes[gi_scores < neg_thresh] = 'negative'
     return classes
 
 
