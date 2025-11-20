@@ -249,7 +249,7 @@ def predict_all_models(embeddings, combination, prediction_type='gi_score'):
     return [r2_linear_pca, r2_ridge, r2_xgboost, r2_randomforest]
 
 
-def run_RandomForest_Classifier(X, y, plot=True):
+def run_RandomForest_Classifier(X, y, plot=True, save=False):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
@@ -266,9 +266,11 @@ def run_RandomForest_Classifier(X, y, plot=True):
         plt.ylabel('True')
         plt.title('Random Forest Confusion Matrix')
         plt.show()
+        if save:
+            plt.savefig('random_forest_confusion_matrix.png')
 
 
-def run_XGBoost_Classifier(X, y, plot=True):
+def run_XGBoost_Classifier(X, y, plot=True, save=False):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     clf = xgb.XGBClassifier(n_estimators=100, max_depth=10, learning_rate=0.1, random_state=42, eval_metric='mlogloss')
     clf.fit(X_train, y_train)
@@ -283,6 +285,8 @@ def run_XGBoost_Classifier(X, y, plot=True):
         plt.ylabel('True')
         plt.title('XGBoost Confusion Matrix')
         plt.show()
+        if save:
+            plt.savefig('xgboost_confusion_matrix.png')
 
 
 def gene_based_train_test_split(embeddings, prediction_type='dmf', holdout_fraction=0.2, random_state=42):
