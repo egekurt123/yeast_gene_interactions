@@ -4,6 +4,12 @@ Machine-learning workflows for predicting yeast gene essentiality, genetic inter
 
 ---
 
+## Project Report
+
+The project report is a joint report with my other project: **Predicting Cancer Genes in Homo Sapiens Using Gene Embeddings**, available at: https://github.com/egekurt123/RNA-gene-disease-predictions
+
+---
+
 ### Requirements
 
 - Python 3.9+
